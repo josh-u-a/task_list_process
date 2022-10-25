@@ -571,6 +571,7 @@ def task_blueprint_feedback(df, current_task_blueprint):
     new_task_count = len(df)
     print(colored(f"{len(current_task_blueprint)} ", 'cyan') + "Current Tasks")
     print(colored(f"{len(df)} ", 'cyan') + "New Tasks")
+    
 
     final_task_name_count = len(current_task_blueprint)+len(df)
     print(colored(f"{final_task_name_count} ", 'cyan') + "Total Tasks")
