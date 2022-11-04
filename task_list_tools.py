@@ -240,8 +240,14 @@ def get_task_list_file_and_validate():
     df['List Description'] = df['List Description'].replace({'':np.nan}).fillna(method = 'ffill')
     df['List Description'] = df['List Description'].fillna('')
     # df['Buyer/Seller code'] = df['Buyer/Seller code'].replace({'':np.nan}).fillna(method = 'ffill')
+    if 'Applies to \nNew Recruit/Experienced Recruit' in df.columns:
+        print(" ")
+        print(colored("Recruiting Task List Import", 'blue', attrs=['bold']))
+        print(" ")
+        df = df.rename(columns = {'Applies to \nNew Recruit/Experienced Recruit' : 'Applies to Buyer/Seller'})
+        df= df.replace({'Applies to Buyer/Seller' : {'New Recruit':'Buyer', 'Experienced Recruit': 'Seller'}})
     df['Applies to Buyer/Seller'] = df['Applies to Buyer/Seller'].replace({'':np.nan}).fillna(method = 'ffill')
-
+    
 
     print(colored('All whitespace cleared from string values.', 'green', attrs=['bold']))
     print(' ')
@@ -314,6 +320,7 @@ def get_task_list_file_and_validate():
         with pd.option_context("display.max_rows", 1000):
             # print(tabulate(df[(df['Task or Notification?'].isna()) | (df['Task or Notification?'].str.contains('T|N')==False)][['sheet_name','Task Name']]))
             print(df[(df['Task or Notification?'].isna()) | (df['Task or Notification?'].str.contains('T|N')==False)][['sheet_name','Task Name']].to_markdown(index = True))
+
     # Corrects current Task List Template's Buyer/Seller code to match legacy version
     if version == 'current':
         df['Applies to Buyer/Seller'] = df['Applies to Buyer/Seller'].str.upper()
@@ -402,7 +409,7 @@ def get_task_list_file_and_validate():
             print(colored("Total Rows: ", 'green'), df[['Task List Name', 'Applies to Buyer/Seller']].value_counts().sum())
        
     else:
-        print('Applies to Buyer/Seller is good.')
+        # print('Applies to Buyer/Seller is good.')
         pass
 
 
@@ -606,7 +613,7 @@ def get_agent_info(team_id):
 def capture_agent_info_and_check(df):
     df_agents = pd.read_clipboard()
     df_agents['full_name'] = df_agents['first_name'] + " " + df_agents['last_name']
-    df_agents_2 = df_agents.copy().append(pd.DataFrame.from_dict({'full_name' : ['TC', 'Agent', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)']}))
+    df_agents_2 = df_agents.copy().append(pd.DataFrame.from_dict({'full_name' : ['TC', 'AGENT', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)']}))
     if len(df[~df['Assign to TC, Agent or assignee full name'].isin(df_agents_2['full_name'])]['Assign to TC, Agent or assignee full name'].unique()) > 0:
         print(colored("STOP!! ", 'red', attrs = ['bold']), "This data has users that are not yet imported into SISU.")
         print(df[~df['Assign to TC, Agent or assignee full name'].isin(df_agents_2['full_name'])]['Assign to TC, Agent or assignee full name'].value_counts())
@@ -633,7 +640,7 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
         'first_name' : ['', '', '', '', ''],
         'last_name' : ['', '', '', '', ''],
         'agent_id' : ['T', 'A', 'I', 'T', 'A'],
-        'name' : ['TC', 'Agent', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)'],
+        'name' : ['TC', 'AGENT', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)'],
         'agent_key' : ['T', 'A', 'I', 'T', 'A']
     })
 
