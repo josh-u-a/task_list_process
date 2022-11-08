@@ -765,6 +765,8 @@ def get_task_blueprint_matchup_data(team_id):
 
     run_list.append('8. Get Task Matchup')
 
+    return matchup_sql_text_2
+
 
 
 
