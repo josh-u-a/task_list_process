@@ -635,6 +635,10 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
     else:
         df_reset_2 = df
 
+    # Often 'Agent' is inserted as the assignee rather than 'AGENT' and pandas is case sensative where Excel is not. 
+    # The below line turns 'Agent' into 'AGENT'. 
+    df['Assign to TC, Agent or assignee full name'] = df['Assign to TC, Agent or assignee full name'].replace({'Agent':'AGENT'})
+
     # This cell takes in the agent information from the SQL query and creats a table to map values
     df_assign_map_general = pd.DataFrame.from_dict({
         'first_name' : ['', '', '', '', ''],
