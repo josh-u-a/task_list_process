@@ -584,7 +584,11 @@ def task_blueprint_feedback(df, current_task_blueprint):
     print(colored(f"{final_task_name_count} ", 'cyan') + "Total Tasks")
 
     '''Task names, types, display_orders, and descriptions'''
-    client_task_blueprint_cols = ['Team ID', 'Task Name', 'Task Description', 'Task or Notification?', 'display_order', 'Trigger Date DB (Sisu)', 'Days', 'Status', 'client_type_id', 'created_ts', 'updated_ts', 'assign_to']
+
+    # what the columns were. Changed 'client_type_id' to 'Buyer/Seller code'. 2022-12-16 Josh
+    # client_task_blueprint_cols = ['Team ID', 'Task Name', 'Task Description', 'Task or Notification?', 'display_order', 'Trigger Date DB (Sisu)', 'Days', 'Status', 'client_type_id', 'created_ts', 'updated_ts', 'assign_to']
+
+    client_task_blueprint_cols = ['Team ID', 'Task Name', 'Task Description', 'Task or Notification?', 'display_order', 'Trigger Date DB (Sisu)', 'Days', 'Status', 'Buyer/Seller code', 'created_ts', 'updated_ts', 'assign_to']
 
     print(" ")
 
@@ -683,8 +687,11 @@ def insert_task_blueprints(df_client_task_blueprints, team_id):
 
     # Create Tasks SQL insert statement, and save to clipboard
 
+    # what the values were: changed the column 'client_type_id' to 'Buyer/Seller code'. 2022-12-16 Josh
+    # task_blueprint_values = "("+df_client_task_blueprints['Team ID'].astype(str)+", '"+ df_client_task_blueprints['Task Name']+"', '"+ df_client_task_blueprints['Task Description']+"', '"+ df_client_task_blueprints['Task or Notification?']+"', "+ df_client_task_blueprints['display_order'].astype(str)+", '"+ df_client_task_blueprints['Trigger Date DB (Sisu)']+ "', "+df_client_task_blueprints['Days'].astype(str)+", '"+ df_client_task_blueprints['Status']+"', '"+ df_client_task_blueprints['client_type_id']+"', "+ df_client_task_blueprints['created_ts']+", "+ df_client_task_blueprints['updated_ts']+", '"+ df_client_task_blueprints['assign_to']+ "'),"
 
-    task_blueprint_values = "("+df_client_task_blueprints['Team ID'].astype(str)+", '"+ df_client_task_blueprints['Task Name']+"', '"+ df_client_task_blueprints['Task Description']+"', '"+ df_client_task_blueprints['Task or Notification?']+"', "+ df_client_task_blueprints['display_order'].astype(str)+", '"+ df_client_task_blueprints['Trigger Date DB (Sisu)']+ "', "+df_client_task_blueprints['Days'].astype(str)+", '"+ df_client_task_blueprints['Status']+"', '"+ df_client_task_blueprints['client_type_id']+"', "+ df_client_task_blueprints['created_ts']+", "+ df_client_task_blueprints['updated_ts']+", '"+ df_client_task_blueprints['assign_to']+ "'),"
+
+    task_blueprint_values = "("+df_client_task_blueprints['Team ID'].astype(str)+", '"+ df_client_task_blueprints['Task Name']+"', '"+ df_client_task_blueprints['Task Description']+"', '"+ df_client_task_blueprints['Task or Notification?']+"', "+ df_client_task_blueprints['display_order'].astype(str)+", '"+ df_client_task_blueprints['Trigger Date DB (Sisu)']+ "', "+df_client_task_blueprints['Days'].astype(str)+", '"+ df_client_task_blueprints['Status']+"', '"+ df_client_task_blueprints['Buyer/Seller code']+"', "+ df_client_task_blueprints['created_ts']+", "+ df_client_task_blueprints['updated_ts']+", '"+ df_client_task_blueprints['assign_to']+ "'),"
     df_client_task_blueprints['task_blueprint_values']  = task_blueprint_values
     task_blueprints_insert_statement = 'INSERT INTO client_task_blueprint ("team_id","name","dscr","task_type","display_order","related_client_date_column","due_days","status","client_type_id","created_ts","updated_ts","assign_to") \nVALUES'
 
