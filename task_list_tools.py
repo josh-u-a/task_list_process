@@ -391,16 +391,16 @@ def get_task_list_file_and_validate():
     if len(df[df['Applies to Buyer/Seller'] == 'BOTH (B&S)'])>0:
         print(colored("Some task lists have 'Applies to Buyer/Seller' set as 'Both (B&S)'", 'yellow', attrs =['bold']))
 
-        df_both = df[df['Applies to Buyer/Seller'] == 'BOTH (B&S)']
-        df_both.loc[df_both['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = 'b'
-        df_both['Buyer/Seller code'] = df_both['Applies to Buyer/Seller']
-        df.loc[df['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = 's'
-        df['Buyer/Seller code'] = df['Applies to Buyer/Seller']
-
-        # df.loc[df['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = '' # '' applies the 'All' disposition
+        # df_both = df[df['Applies to Buyer/Seller'] == 'BOTH (B&S)']
+        # df_both.loc[df_both['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = 'b'
+        # df_both['Buyer/Seller code'] = df_both['Applies to Buyer/Seller']
+        # df.loc[df['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = 's'
         # df['Buyer/Seller code'] = df['Applies to Buyer/Seller']
 
-        df = df.append(df_both)
+        # df = df.append(df_both)
+
+        df.loc[df['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = '' # '' applies the 'All' disposition
+        df['Buyer/Seller code'] = df['Applies to Buyer/Seller']
 
         if len(df[df['Applies to Buyer/Seller'] == 'BOTH (B&S)'])>0:
             print(colored("ERROR:", 'red', attrs = ['bold']) + " Could not process 'Applies to Buyer/Seller' values set as 'Both (B&S)'")
@@ -601,7 +601,7 @@ def task_blueprint_feedback(df, current_task_blueprint):
 def get_agent_info(team_id):
     # Get agent information
 
-    agent_info_sql_text = f"select a.first_name, a.last_name, a.agent_id from team t left join team_agent ta on t.team_id = ta.team_id left join agent a on ta.agent_id = a.agent_id where ta.team_id = {team_id} and a.status = 'N';"
+    agent_info_sql_text = f"select a.first_name, a.last_name, a.agent_id, a.status agent_status from team t left join team_agent ta on t.team_id = ta.team_id left join agent a on ta.agent_id = a.agent_id where ta.team_id = {team_id};" # removed "and a.status = 'N'""
     clipboard.copy(agent_info_sql_text)
     # df_agent_info_sql_text = pd.DataFrame([agent_info_sql_text])
     # df_agent_info_sql_text.to_clipboard(index=False,header=False)
@@ -640,7 +640,8 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
     if 'df_reset_2' in locals():
         pass
     else:
-        df_reset_2 = df
+        df_reset_2 = df.copy()
+
 
     # Often 'Agent' is inserted as the assignee rather than 'AGENT' and pandas is case sensative where Excel is not. 
     # The below line turns 'Agent' into 'AGENT'. 
@@ -655,6 +656,7 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
         'agent_key' : ['T', 'A', 'I', 'T', 'A']
     })
 
+
     # df_assign_map = pd.read_clipboard()
     df_assign_map = df_agents
     if len(df_assign_map) == 0:
@@ -667,6 +669,9 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
     df_assign_map['agent_key'] = 'A'
     df_assign_map['agent_key'] = df_assign_map['agent_key'] + df_assign_map['agent_id'].astype(str)
     df_assign_map = df_assign_map.append(df_assign_map_general)
+    mask = df_assign_map[(df_assign_map['name'].duplicated(keep=False))&(df_assign_map['agent_status']=='D')]['agent_key']
+    df_assign_map = df_assign_map[~df_assign_map['agent_key'].isin(mask)]
+
 
     df['Assign to TC, Agent or assignee full name'] = df['Assign to TC, Agent or assignee full name'].str.strip()
     df['Assign to TC, Agent or assignee full name'] = df['Assign to TC, Agent or assignee full name'].str.replace("  ", " ")
@@ -675,13 +680,17 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
     df = df.rename(columns = {'agent_key' : 'assign_to'})
     # df['name'] = df['name'].fillna('Agent')
 
+
     df = df.reset_index(drop = True)
     df['display_order'] = df.index
     # df['related_client_date_column'] = ''
     df['client_type_id'] = ''
 
+
+
     df_client_task_blueprints = df[client_task_blueprint_cols]
     df_client_task_blueprints = df_client_task_blueprints.fillna('')
+
 
     return df, df_reset_2, df_assign_map, df_assign_map_general, df_client_task_blueprints
 
@@ -748,6 +757,8 @@ def retrieve_task_list_matchup_data():
 
     df_matchup_task_lists = pd.read_clipboard()
     # df_matchup_task_lists = df_matchup_task_lists[df_matchup_task_lists['task_list_id'].notna()]
+
+    df_matchup_task_lists['client_type_id'] = df_matchup_task_lists['client_type_id'].fillna('')
 
 
 
