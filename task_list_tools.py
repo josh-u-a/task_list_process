@@ -397,6 +397,9 @@ def get_task_list_file_and_validate():
         df.loc[df['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = 's'
         df['Buyer/Seller code'] = df['Applies to Buyer/Seller']
 
+        # df.loc[df['Applies to Buyer/Seller'] == 'BOTH (B&S)', 'Applies to Buyer/Seller'] = '' # '' applies the 'All' disposition
+        # df['Buyer/Seller code'] = df['Applies to Buyer/Seller']
+
         df = df.append(df_both)
 
         if len(df[df['Applies to Buyer/Seller'] == 'BOTH (B&S)'])>0:
