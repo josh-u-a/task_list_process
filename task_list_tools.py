@@ -500,6 +500,11 @@ def define_client_task_list(df, current_task_list_names, final_task_list_count):
     df_client_task_list = df[client_task_list_cols].fillna('')
     df_client_task_list = df_client_task_list[-df_client_task_list[['Task List Name', 'List Description', 'Buyer/Seller code']].duplicated()].reset_index(drop = True)
     if len(current_task_list_names['display_order']) > 0: # If there are no current task lists, we start the display order at 1
+
+        current_task_list_names.loc[current_task_list_names['display_order']=="None", 'display_order'] = 0  # if the display order value is "None" which can come from RDM then replace with 0
+        current_task_list_names['display_order'] = current_task_list_names['display_order'].astype(int) # set the display order column to int format
+        current_task_list_names.loc[current_task_list_names['display_order']==0, 'display_order'] = [current_task_list_names['display_order'].max() + 1 + i for i in range(0, len(current_task_list_names))] # replace 0 values with iterative values greater than the maximum display order values
+
         df_client_task_list['display_order'] = [current_task_list_names['display_order'].max() + 1 + i for i in range(0, len(df_client_task_list))]
     else:
         df_client_task_list['display_order'] = [1 + i for i in range(0, len(df_client_task_list))]
