@@ -57,7 +57,7 @@ def get_task_list_file_and_validate():
     It checks if you have Google Drive Desktop App installed, and if so will open a path to the IMPORTS
     folder when looking for the file, otherwise it will open the 'Downloads' folder in the Finder. 
 
-    If you have Google Drive Destop installed, but prefer to save files to your computer, set the check_for_google_drive
+    If you have Google Drive Desktop installed, but prefer to save files to your computer, set the check_for_google_drive
     variable to False (True and False are case sensitive). 
     '''
 
@@ -65,7 +65,7 @@ def get_task_list_file_and_validate():
     local_folder = "Downloads" #you can change this to start at a different folder. 
 
     root = tk.Tk()
-    # os.system('''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' ''')
+    # os.system('''/usr/bin/osascript -e 'tell app "Finder" to set front most of process "Python" to true' ''')
     # root.wm_attributes('-topmost', 1)
     raise_app(root)
     root.withdraw()
@@ -415,6 +415,86 @@ def get_task_list_file_and_validate():
         # print('Applies to Buyer/Seller is good.')
         pass
 
+    # In the event that the 
+    dt_dict = {
+        "Acceptance Date": "acceptance_dt",
+        "Appointment Met": "appt_dt",
+        "Appointment Set": "appt_set_dt",
+        "Appt Set For Date": "original_appt_set_dt",
+        "Archived Date": "archive_ts",
+        "Buyer agreement end date": "buyer_agreement_end_dt",
+        "Close Scheduled Date": "forecasted_closed_dt",
+        "Closed date": "closed_dt",
+        "Created": "created_ts",
+        "Date of city inspection for C of O": "city_inspection_for_cofo_dt",
+        "Document(s) Approval Date": "all_docs_approved_dt",
+        "Due Diligence Deadline": "due_diligence_deadline_dt",
+        "Earnest Money Due Date": "earnest_money_due_dt",
+        "Estimated Purchase Date": "estimated_purchase_dt",
+        "Final Approval": "all_docs_approved_dt",
+        "Financing and Appraisal Deadline": "financing_appraisal_deadline_dt",
+        "First showing Date": "first_showing_dt",
+        "Forecasted Closed Date": "forecasted_closed_dt",
+        "Home Inspection Deadline": "home_inspection_deadline_dt",
+        "Inspection Deadline": "due_diligence_deadline_dt",
+        "Lead Date": "lead_dt",
+        "Listing Date": "listing_dt",
+        "Listing Expiration Date": "listing_agreement_end_dt",
+        "MLS Live Date": "listing_dt",
+        "Offer Date": "first_offer_dt",
+        "Offer Reference Date": "offer_ref_dt",
+        "Open House Date": "open_house_ts",
+        "Paid Date": "paid_dt",
+        "Photographer Date": "photographer_date",
+        "Possession Date": "possession_dt",
+        "Sales Manager Paid Date": "sales_manager_paid_dt",
+        "Seller Disclosure Deadline": "seller_disclosure_dt",
+        "Settlement Date": "closed_dt",
+        "Sign Install Date": "sign_install_ts",
+        "Signed Date": "signed_dt",
+        "Started in Market": "started_in_market_dt",
+        "Target List Date": "target_list_dt",
+        "Transaction Initiated Date": "trans_init_dt",
+        "UC / Pending": "uc_dt",
+        "Under Contract Date / Pending": "uc_dt",
+        "Walk Through Date": "walk_through_dt"
+    }
+
+    df_dt = pd.DataFrame.from_dict(dt_dict,orient='index')
+    df_dt = df_dt.reset_index().rename(columns = {'index':'trigger_label',0:'trigger_field'})
+
+    df = df.merge(df_dt, left_on = 'Task Trigger date \n(Relative due date)', right_on = 'trigger_label', how = 'left')
+    df.loc[df['Trigger Date DB (Sisu)']=='', 'Trigger Date DB (Sisu)'] = df.loc[df['Trigger Date DB (Sisu)']=='', 'trigger_field']
+    df.loc[df['Trigger Date DB (Sisu)'].isna(), 'Trigger Date DB (Sisu)'] = df.loc[df['Trigger Date DB (Sisu)'].isna(), 'Task Trigger date \n(Relative due date)'].str.lower().str.replace(' ', '_')
+
+    hidden_user_dict={
+        "TC":"T",
+        "A":"A",
+        "ISA":"I",
+        "RECRUITER COORDINATOR":"T",
+        "RECRUITER":"A"
+    }
+
+    df_hidden_user = pd.DataFrame.from_dict(hidden_user_dict,orient='index')
+    df_hidden_user = df_hidden_user.reset_index().rename(columns = {'index':'user_label',0:'user_field'})
+    df = df.merge(df_hidden_user, left_on = 'Assign to TC, Agent or assignee full name', right_on = 'user_label', how = 'left')
+    df.loc[df['Assign To T/A/Agent ID']=='', 'Assign To T/A/Agent ID'] = df.loc[df['Assign To T/A/Agent ID']=='', 'user_field']
+
+    max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A'))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].astype(int).max()
+    
+
+    unique_users_missing_hidden_id = df[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']=='')]['Assign to TC, Agent or assignee full name'].unique().tolist()
+    
+    unique_users_missing_hidden_id_dict = {}
+    
+    for i in unique_users_missing_hidden_id:
+        unique_users_missing_hidden_id_dict[i] = f"A{max_hidden_user + 1}"
+        max_hidden_user += 1
+
+    df_unique_users_missing_hidden_id = pd.DataFrame.from_dict(unique_users_missing_hidden_id_dict, orient='index')
+    df_unique_users_missing_hidden_id = df_unique_users_missing_hidden_id.reset_index().rename(columns = {'index':'hidden_user_label',0:'hidden_user_field'})
+    df = df.merge(df_unique_users_missing_hidden_id, left_on = 'Assign to TC, Agent or assignee full name', right_on = 'hidden_user_label', how = 'left')
+    df.loc[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']==''),'Assign To T/A/Agent ID'] = df.loc[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']==''),'hidden_user_field']
 
     return team_id, team_name, df
 
@@ -515,7 +595,7 @@ def define_client_task_list(df, current_task_list_names, final_task_list_count):
         # print("Finals display order equals expected Final Task List count.")
         pass
     else:
-        print(colored('ERROR: Final display order does NOT equal the expected Final Task List count.', 'red', attrs=['bold']))
+        print(colored('Warning: Final display order does NOT equal the expected Final Task List count.', 'yellow', attrs=['bold']))
 
 
     return df_client_task_list, client_task_list_cols_order
@@ -869,7 +949,7 @@ def test_merge(new_task_count, df_matchup_task_blueprint, df_matchup_task_lists,
     '''
     Maybe the 6 parameters and the display order will work as these values are less likely to be duplicate. 
     Can still be duplicate if using the same data a second or third time.
-    You can tell that this is occuring if the count of the rows is a multiple of the expected rows. 
+    You can tell that this is occurring if the count of the rows is a multiple of the expected rows. 
     Each duplicate will then have unique task_list_id and task_blueprint_id.
 
 
