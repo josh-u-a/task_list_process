@@ -99,8 +99,11 @@ def get_task_list_file_and_validate():
     Sanity check to make sure that the information is collected correctly, and to give an overview of 
     what is present in the file. 
     '''
-
-    xl_sheets.remove('Sample (Completed)')
+    if 'Sample (Completed)' in xl_sheets:
+        xl_sheets.remove('Sample (Completed)')
+    else:
+        print('Sample tab has already been removed.')
+        
 
     print(f"Team ID:\t{team_id}")
     print(f"Team Name:\t{team_name}")
