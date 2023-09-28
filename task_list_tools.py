@@ -100,12 +100,15 @@ def get_task_list_file_and_validate():
     what is present in the file. 
     '''
 
+    xl_sheets.remove('Sample (Completed)')
+
     print(f"Team ID:\t{team_id}")
     print(f"Team Name:\t{team_name}")
     print(f"File Name:\t{file_name}")
     for i in range(0, len(xl_sheets)):
         print(f"Sheet {i+1} (i={i}):   \t{xl_sheets[i]}")
     print(' ')
+
 
     # If the first column Header is 'Task List Name' then we need to capture this sheet. This will capture some sheets with no info, but later cleaning will remove that data. 
 
