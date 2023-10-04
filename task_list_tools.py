@@ -498,9 +498,10 @@ def get_task_list_file_and_validate():
         max_hidden_user += 1
 
     df_unique_users_missing_hidden_id = pd.DataFrame.from_dict(unique_users_missing_hidden_id_dict, orient='index')
-    df_unique_users_missing_hidden_id = df_unique_users_missing_hidden_id.reset_index().rename(columns = {'index':'hidden_user_label',0:'hidden_user_field'})
-    df = df.merge(df_unique_users_missing_hidden_id, left_on = 'Assign to TC, Agent or assignee full name', right_on = 'hidden_user_label', how = 'left')
-    df.loc[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']==''),'Assign To T/A/Agent ID'] = df.loc[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']==''),'hidden_user_field']
+    if len(df_unique_users_missing_hidden_id) > 0:
+        df_unique_users_missing_hidden_id = df_unique_users_missing_hidden_id.reset_index().rename(columns = {'index':'hidden_user_label',0:'hidden_user_field'})
+        df = df.merge(df_unique_users_missing_hidden_id, left_on = 'Assign to TC, Agent or assignee full name', right_on = 'hidden_user_label', how = 'left')
+        df.loc[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']==''),'Assign To T/A/Agent ID'] = df.loc[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']==''),'hidden_user_field']
 
     return team_id, team_name, df
 
