@@ -486,7 +486,7 @@ def get_task_list_file_and_validate():
     df = df.merge(df_hidden_user, left_on = 'Assign to TC, Agent or assignee full name', right_on = 'user_label', how = 'left')
     df.loc[df['Assign To T/A/Agent ID']=='', 'Assign To T/A/Agent ID'] = df.loc[df['Assign To T/A/Agent ID']=='', 'user_field']
 
-    max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A'))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].astype(int).max()
+    max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A'))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].str.replace('', '0').astype(int).max()
     
 
     unique_users_missing_hidden_id = df[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']=='')]['Assign to TC, Agent or assignee full name'].unique().tolist()
