@@ -157,7 +157,7 @@ def get_task_list_file_and_validate():
         xl_file[i] = xl_file[i][xl_file[i]['Task Name'].notna()]                    #Skip all rows with missing "task name"
         xl_file[i] = xl_file[i][xl_file[i]['Task Name'].str.contains("end of list")==False]
         xl_file[i]['sheet_name'] = i
-        df = df.append(xl_file[i])
+        df = pd.concat([df,xl_file[i]])
         file_len = len(xl_file[i][0:])
         print(colored(file_len,'cyan') + f" rows in {i}")
         sheet_len = sheet_len+file_len
@@ -308,13 +308,21 @@ def get_task_list_file_and_validate():
         else:
             print(colored(f"ERROR: Required column", 'red', attrs = ['bold']) + colored(f" {i} ", 'yellow', attrs=['bold']) + colored(f"not found in template.", 'red', attrs = ['bold']))
         
-
-    df['Assign to TC, Agent or assignee full name'] = df['Assign to TC, Agent or assignee full name'].replace({'':np.nan})
-    if len(df[(df['Assign to TC, Agent or assignee full name'].isna()) & (df['Task or Notification?'] == 'T')])>0:
-        print(colored('THE FOLLOWING TASKS ARE MISSING ASSIGNEE:', 'red', attrs=['bold']) + f" TOTAL: {len(df[df['Assign to TC, Agent or assignee full name'].isna()])}")
-        with pd.option_context("display.max_rows", 1000):  
-            # print(tabulate(df[df['Assign to TC, Agent or assignee full name'].isna()][['sheet_name','Task Name']]))
-            print(df[df['Assign to TC, Agent or assignee full name'].isna()][['sheet_name','Task Name']].to_markdown(index = True))
+    if "Assign task to role or assignee (only for tasks)" in list(df.columns):
+        print(colored('Assign task to role or assignee (only for tasks)', 'green', attrs=['bold']) + " is being used instead of " + colored('Assign to TC, Agent or assignee full name', 'yellow', attrs=['bold']))
+        df['Assign to TC, Agent or assignee full name'] = df['Assign task to role or assignee (only for tasks)'].replace({'':np.nan})
+        if len(df[(df['Assign to TC, Agent or assignee full name'].isna()) & (df['Task or Notification?'] == 'T')])>0:
+            print(colored('THE FOLLOWING TASKS ARE MISSING ASSIGNEE:', 'red', attrs=['bold']) + f" TOTAL: {len(df[df['Assign to TC, Agent or assignee full name'].isna()])}")
+            with pd.option_context("display.max_rows", 1000):  
+                # print(tabulate(df[df['Assign to TC, Agent or assignee full name'].isna()][['sheet_name','Task Name']]))
+                print(df[df['Assign to TC, Agent or assignee full name'].isna()][['sheet_name','Task Name']].to_markdown(index = True))
+    else:
+        df['Assign to TC, Agent or assignee full name'] = df['Assign to TC, Agent or assignee full name'].replace({'':np.nan})
+        if len(df[(df['Assign to TC, Agent or assignee full name'].isna()) & (df['Task or Notification?'] == 'T')])>0:
+            print(colored('THE FOLLOWING TASKS ARE MISSING ASSIGNEE:', 'red', attrs=['bold']) + f" TOTAL: {len(df[df['Assign to TC, Agent or assignee full name'].isna()])}")
+            with pd.option_context("display.max_rows", 1000):  
+                # print(tabulate(df[df['Assign to TC, Agent or assignee full name'].isna()][['sheet_name','Task Name']]))
+                print(df[df['Assign to TC, Agent or assignee full name'].isna()][['sheet_name','Task Name']].to_markdown(index = True))
 
     df['Assign To T/A/Agent ID'] = df['Assign To T/A/Agent ID'].replace('', np.nan)
     if len(df[df['Assign To T/A/Agent ID'].isna()]) > 0 and len(df['Assign To T/A/Agent ID']) != len(df['Assign to TC, Agent or assignee full name']):
@@ -486,7 +494,10 @@ def get_task_list_file_and_validate():
     df = df.merge(df_hidden_user, left_on = 'Assign to TC, Agent or assignee full name', right_on = 'user_label', how = 'left')
     df.loc[df['Assign To T/A/Agent ID']=='', 'Assign To T/A/Agent ID'] = df.loc[df['Assign To T/A/Agent ID']=='', 'user_field']
 
-    max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A'))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].str.replace('', '0').astype(int).max()
+    if "A" in df['Assign To T/A/Agent ID'].to_list():
+        max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A'))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].str.replace('', '0').astype(int).max()
+    else:
+        max_hidden_user = 0
     
 
     unique_users_missing_hidden_id = df[(df['Assign To T/A/Agent ID'].isna())|(df['Assign To T/A/Agent ID']=='')]['Assign to TC, Agent or assignee full name'].unique().tolist()
@@ -712,7 +723,7 @@ def get_agent_info(team_id):
 def capture_agent_info_and_check(df):
     df_agents = pd.read_clipboard()
     df_agents['full_name'] = df_agents['first_name'] + " " + df_agents['last_name']
-    df_agents_2 = df_agents.copy().append(pd.DataFrame.from_dict({'full_name' : ['TC', 'AGENT', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)']}))
+    df_agents_2 = pd.concat([df_agents.copy(), pd.DataFrame.from_dict({'full_name' : ['TC', 'AGENT', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)']})])
     if len(df[~df['Assign to TC, Agent or assignee full name'].isin(df_agents_2['full_name'])]['Assign to TC, Agent or assignee full name'].unique()) > 0:
         print(colored("STOP!! ", 'red', attrs = ['bold']), "This data has users that are not yet imported into SISU.")
         print(df[~df['Assign to TC, Agent or assignee full name'].isin(df_agents_2['full_name'])]['Assign to TC, Agent or assignee full name'].value_counts())
@@ -760,7 +771,7 @@ def process_agent_info(df, df_agents, client_task_blueprint_cols):
     df_assign_map['name'] = df_assign_map['first_name'].str.strip() + " " + df_assign_map['last_name'].str.strip()
     df_assign_map['agent_key'] = 'A'
     df_assign_map['agent_key'] = df_assign_map['agent_key'] + df_assign_map['agent_id'].astype(str)
-    df_assign_map = df_assign_map.append(df_assign_map_general)
+    df_assign_map = pd.concat([df_assign_map, df_assign_map_general])
     mask = df_assign_map[(df_assign_map['name'].duplicated(keep=False))&(df_assign_map['agent_status']=='D')]['agent_key']
     df_assign_map = df_assign_map[~df_assign_map['agent_key'].isin(mask)]
 
