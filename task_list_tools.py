@@ -337,7 +337,7 @@ def get_task_list_file_and_validate():
 
     # Corrects current Task List Template's Buyer/Seller code to match legacy version
     if version == 'current':
-        df['Applies to Buyer/Seller'] = df['Applies to Buyer/Seller'].str.upper().str.strip()
+        df['Applies to Buyer/Seller'] = df['Applies to Buyer/Seller'].astype(str).str.upper().str.strip()
         df['Applies to Buyer/Seller'] = df['Applies to Buyer/Seller'].replace({'BUYER':'b', 'SELLER':'s'})
         df['Buyer/Seller code'] = df['Applies to Buyer/Seller'] 
 
@@ -381,6 +381,9 @@ def get_task_list_file_and_validate():
         print(" ")
     else:
         pass
+    
+    if "Trigger Date DB (SISU)" in df.columns:
+        df["Trigger Date DB (Sisu)"] = df["Trigger Date DB (SISU)"] 
 
     if len(df[df['Trigger Date DB (Sisu)'].isna()]) > 0:
         print(colored('ERROR: ', 'red', attrs=['bold']) + "Trigger dates are custom and were pasted into template.")
