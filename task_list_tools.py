@@ -384,6 +384,7 @@ def get_task_list_file_and_validate():
     
     if "Trigger Date DB (SISU)" in df.columns:
         df["Trigger Date DB (Sisu)"] = df["Trigger Date DB (SISU)"] 
+        print(colored("Found column ", color = 'blue') + colored("Trigger Date DB (SISU) ", color='yellow') + colored("(with 'Sisu' capitalized) ", color='magenta') + colored("in file. \nIgnore missing Trigger Date error. ", color = 'blue'))
 
     if len(df[df['Trigger Date DB (Sisu)'].isna()]) > 0:
         print(colored('ERROR: ', 'red', attrs=['bold']) + "Trigger dates are custom and were pasted into template.")
