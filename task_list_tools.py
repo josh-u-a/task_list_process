@@ -499,7 +499,7 @@ def get_task_list_file_and_validate():
     df.loc[df['Assign To T/A/Agent ID']=='', 'Assign To T/A/Agent ID'] = df.loc[df['Assign To T/A/Agent ID']=='', 'user_field']
 
     if "A" in df['Assign To T/A/Agent ID'].to_list():
-        max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A'))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].str.replace('', '0').astype(int).max()
+        max_hidden_user = df[(df['Assign To T/A/Agent ID'].str.startswith('A', na = False))&(len(df['Assign To T/A/Agent ID'])>1)]['Assign To T/A/Agent ID'].str.split('A', expand = True)[1].str.replace('', '0').astype(int).max()
     else:
         max_hidden_user = 0
     
@@ -509,8 +509,9 @@ def get_task_list_file_and_validate():
     unique_users_missing_hidden_id_dict = {}
     
     for i in unique_users_missing_hidden_id:
-        unique_users_missing_hidden_id_dict[i] = f"A{max_hidden_user + 1}"
-        max_hidden_user += 1
+        if type(i) != float:
+            unique_users_missing_hidden_id_dict[i] = f"A{max_hidden_user + 1}"
+            max_hidden_user += 1
 
     df_unique_users_missing_hidden_id = pd.DataFrame.from_dict(unique_users_missing_hidden_id_dict, orient='index')
     if len(df_unique_users_missing_hidden_id) > 0:
@@ -557,6 +558,7 @@ def retrieve_current_task_lists_data(df):
     #     pass
     # else:
     current_task_list_names = pd.read_clipboard()
+    current_task_list_names.columns = current_task_list_names.columns.str.lower()
     if len(current_task_list_names) == 0: # If there are no task lists yet, the quere will return 0, in which case we need to start a blank DataFrame with the correct column names
         current_task_list_names = pd.DataFrame(columns = ['task_list_id', 'team_id', 'name', 'dscr', 'client_type_id', 'created_ts', 'updated_ts', 'status', 'display_order', 'status_trigger', 'trigger_by', 'transaction_stage_trigger'])
     else:
@@ -673,6 +675,7 @@ def retrieve_task_blueprints():
     '''Once SQL query for the task blueprint is copied to the clipboard, run this cell'''
 
     current_task_blueprint = pd.read_clipboard()
+    current_task_blueprint.columns = current_task_blueprint.columns.str.lower()
 
     if len(current_task_blueprint) == '0':
         current_task_blueprint = pd.DataFrame(columns = ['task_blueprint_id', 'team_id', 'name', 'dscr', 'task_type', 'display_order', 'related_client_date_column', 'due_days', 'status', 'client_type_id', 'created_ts', 'updated_ts', 'assign_to', 'email_template_id', 'email_subject', 'email_recipients'])
@@ -726,6 +729,7 @@ def get_agent_info(team_id):
 
 def capture_agent_info_and_check(df):
     df_agents = pd.read_clipboard()
+    df_agents.columns = df_agents.columns.str.lower()
     df_agents['full_name'] = df_agents['first_name'] + " " + df_agents['last_name']
     df_agents_2 = pd.concat([df_agents.copy(), pd.DataFrame.from_dict({'full_name' : ['TC', 'AGENT', 'ISA', 'RECRUITER COORDINATOR', 'RECRUITER (recruit platform)']})])
     if len(df[~df['Assign to TC, Agent or assignee full name'].isin(df_agents_2['full_name'])]['Assign to TC, Agent or assignee full name'].unique()) > 0:
@@ -863,6 +867,7 @@ def retrieve_task_list_matchup_data():
     '''
 
     df_matchup_task_lists = pd.read_clipboard()
+    df_matchup_task_lists.columns = df_matchup_task_lists.columns.str.lower()
     # df_matchup_task_lists = df_matchup_task_lists[df_matchup_task_lists['task_list_id'].notna()]
 
     df_matchup_task_lists['client_type_id'] = df_matchup_task_lists['client_type_id'].fillna('')
@@ -915,6 +920,7 @@ def retrieve_task_blueprint_matchup_data(df):
     '''Once SQL query is copied to clipboard, run this cell'''
 
     df_matchup_task_blueprint = pd.read_clipboard()
+    df_matchup_task_blueprint.columns = df_matchup_task_blueprint.columns.str.lower()
 
 
 
